@@ -1,29 +1,23 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const path = require('path');  // Para servir arquivos estáticos
+const path = require('path');
 
 const app = express();
 const port = 3000;
 
-// Middlewares
 app.use(bodyParser.json());
 app.use(cors());
-
-// Serve arquivos estáticos da pasta "public"
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Dados de usuários e fila
 let usuarios = [];
 let filaAtendimento = [];
 let proximoAtendimento = null;
 
-// Função para gerar senha
 function gerarSenha() {
     return 'A' + Math.floor(1000 + Math.random() * 9000);
 }
 
-// Rota para registrar usuário
 app.post('/registrar', (req, res) => {
     const { nome, cpf } = req.body;
     const senha = gerarSenha();
@@ -32,29 +26,31 @@ app.post('/registrar', (req, res) => {
     res.json({ mensagem: 'Usuário registrado com sucesso', senha });
 });
 
-// Rota para obter o próximo usuário na fila
-app.get('/proximo', (req, res) => {
+app.get('/fila', (req, res) => {
+    res.json({ fila: filaAtendimento });
+});
+
+app.post('/proximo', (req, res) => {
     if (filaAtendimento.length === 0) {
         return res.json({ mensagem: 'Nenhum usuário na fila' });
     }
-    proximoAtendimento = filaAtendimento[0];  // Exibe a primeira senha na fila
+    proximoAtendimento = filaAtendimento[0]; // A próxima senha a ser atendida
     res.json({ proximo: proximoAtendimento });
 });
 
-// Rota para finalizar o atendimento atual
 app.post('/finalizar', (req, res) => {
     if (!proximoAtendimento) {
         return res.json({ mensagem: 'Nenhum atendimento em andamento' });
     }
-    filaAtendimento.shift();  // Remove o atendimento atual da fila
-    proximoAtendimento = filaAtendimento[0] || null;  // Atualiza a próxima senha
-    res.json({ 
+    filaAtendimento.shift(); // Remove a senha da fila
+    proximoAtendimento = filaAtendimento[0] || null; // Atualiza a próxima senha
+
+    res.json({
         mensagem: 'Atendimento finalizado',
-        proximo: proximoAtendimento || 'Nenhum'  // Exibe a próxima senha ou 'Nenhum'
+        proximo: proximoAtendimento || 'Nenhum'
     });
 });
 
-// Inicia o servidor
 app.listen(port, () => {
     console.log(`Servidor rodando em http://localhost:${port}`);
 });

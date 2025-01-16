@@ -4,33 +4,190 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema de Atendimento</title>
+    <style>
+        /* Reset de margens e padding */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Fonte */
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f7f7f7;
+            color: #333;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2.5em;
+            color: #4CAF50;
+        }
+
+        /* Títulos */
+        h2 {
+            margin-top: 20px;
+            font-size: 1.8em;
+            color: #333;
+        }
+
+        /* Formulário */
+        form {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin: 20px auto;
+            max-width: 400px;
+        }
+
+        label {
+            font-size: 1.1em;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1em;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #4CAF50;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        /* Seção de Fila de Atendimento */
+        #lista-fila, #lista-atendidos {
+            list-style-type: none;
+            padding: 0;
+            margin-top: 20px;
+        }
+
+        li {
+            background-color: #f1f1f1;
+            padding: 10px;
+            margin-bottom: 8px;
+            border-radius: 5px;
+            font-size: 1.1em;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* Seção de Atendimento */
+        #senha-atual {
+            font-size: 1.4em;
+            font-weight: bold;
+            background-color: #f1f1f1;
+            padding: 12px;
+            margin: 20px 0;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        /* Botões de finalização */
+        #btn-finalizar, #btn-proximo-cliente {
+            background-color: #ff9800;
+        }
+
+        /* Melhorando a aparência dos botões ao passar o mouse */
+        #btn-finalizar:hover, #btn-proximo-cliente:hover {
+            background-color: #e68900;
+        }
+
+        /* Centralização e design de container */
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Resposta de erros e mensagens */
+        #mensagem {
+            color: #4CAF50;
+            font-weight: bold;
+        }
+
+        /* Resposta de erros */
+        .erro {
+            color: red;
+        }
+
+        /* Responsividade */
+        @media screen and (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .container {
+                padding: 10px;
+            }
+
+            h1 {
+                font-size: 2em;
+            }
+
+            h2 {
+                font-size: 1.5em;
+            }
+        }
+    </style>
 </head>
 <body>
-    <h1>Bem-vindo ao Sistema de Atendimento</h1>
+    <div class="container">
+        <h1>Bem-vindo ao Sistema de Atendimento</h1>
 
-    <!-- Formulário para registrar usuário -->
-    <h2>Registrar Usuário</h2>
-    <form id="form-registrar">
-        <label for="nome">Nome:</label>
-        <input type="text" id="nome" required><br><br>
+        <!-- Formulário para registrar usuário -->
+        <h2>Registrar Usuário</h2>
+        <form id="form-registrar">
+            <label for="nome">Nome:</label>
+            <input type="text" id="nome" required><br><br>
 
-        <label for="cpf">CPF:</label>
-        <input type="text" id="cpf" required><br><br>
+            <label for="cpf">CPF:</label>
+            <input type="text" id="cpf" required><br><br>
 
-        <button type="submit">Registrar</button>
-    </form>
+            <button type="submit">Registrar</button>
+        </form>
 
-    <p id="mensagem"></p>
+        <p id="mensagem"></p>
 
-    <h2>Próximo Atendimento</h2>
-    <button id="btn-proximo">Ver próximo</button>
-    <p id="senha-proximo"></p>
+        <h2>Fila de Atendimento</h2>
+        <ul id="lista-fila"></ul>
 
-    <h2>Finalizar Atendimento</h2>
-    <button id="btn-finalizar">Finalizar atendimento</button>
-    <p id="mensagem-finalizar"></p>
+        <h2>Atendimento Sendo Realizado</h2>
+        <p id="senha-atual"></p>
+        <button id="btn-finalizar">Finalizar esse atendimento</button>
+
+        <button id="btn-proximo-cliente">Próximo Cliente</button>
+
+        <h2>Senhas Atendidas</h2>
+        <ul id="lista-atendidos"></ul>
+    </div>
 
     <script>
+        let senhasAtendidas = [];
+        let atendimentoEmAndamento = null;
+
         // Função para registrar um usuário
         document.getElementById("form-registrar").addEventListener("submit", function(event) {
             event.preventDefault();
@@ -47,38 +204,78 @@
             .then(response => response.json())
             .then(data => {
                 document.getElementById("mensagem").innerText = data.mensagem + "\nSenha: " + data.senha;
+
+                // Limpa os campos de entrada
+                document.getElementById("nome").value = '';
+                document.getElementById("cpf").value = '';
+
+                atualizarFila();
             })
             .catch(error => console.error('Erro:', error));
         });
 
-        // Função para ver o próximo atendimento
-        document.getElementById("btn-proximo").addEventListener("click", function() {
-            fetch('http://localhost:3000/proximo')
+        // Função para avançar para o próximo atendimento
+        document.getElementById("btn-proximo-cliente").addEventListener("click", function() {
+            fetch('http://localhost:3000/proximo', { method: 'POST' })
             .then(response => response.json())
             .then(data => {
                 if (data.proximo) {
-                    document.getElementById("senha-proximo").innerText = "Próxima senha: " + data.proximo;
+                    document.getElementById("senha-atual").innerText = "Senha em atendimento: " + data.proximo;
+                    atendimentoEmAndamento = data.proximo; // Armazenar a senha do atendimento atual
                 } else {
-                    document.getElementById("senha-proximo").innerText = data.mensagem;
+                    document.getElementById("senha-atual").innerText = data.mensagem;
                 }
+                atualizarFila();
             })
             .catch(error => console.error('Erro:', error));
         });
 
         // Função para finalizar o atendimento
         document.getElementById("btn-finalizar").addEventListener("click", function() {
-            fetch('http://localhost:3000/finalizar', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            })
+            if (!atendimentoEmAndamento) return;
+
+            fetch('http://localhost:3000/finalizar', { method: 'POST' })
             .then(response => response.json())
             .then(data => {
-                document.getElementById("mensagem-finalizar").innerText = data.mensagem + "\nPróxima senha: " + data.proximo;
+                if (data.proximo) {
+                    senhasAtendidas.push(atendimentoEmAndamento);
+                    atendimentoEmAndamento = null; // Resetar o atendimento em andamento
+                    atualizarAtendidos();
+                    atualizarFila();
+                }
             })
             .catch(error => console.error('Erro:', error));
         });
+
+        // Função para atualizar a fila de atendimento
+        function atualizarFila() {
+            fetch('http://localhost:3000/fila')
+            .then(response => response.json())
+            .then(data => {
+                const listaFila = document.getElementById("lista-fila");
+                listaFila.innerHTML = '';
+                data.fila.forEach(senha => {
+                    const li = document.createElement("li");
+                    li.textContent = senha;
+                    listaFila.appendChild(li);
+                });
+            })
+            .catch(error => console.error('Erro:', error));
+        }
+
+        // Função para atualizar a lista de senhas atendidas
+        function atualizarAtendidos() {
+            const listaAtendidos = document.getElementById("lista-atendidos");
+            listaAtendidos.innerHTML = '';
+            senhasAtendidas.forEach(senha => {
+                const li = document.createElement("li");
+                li.textContent = senha;
+                listaAtendidos.appendChild(li);
+            });
+        }
+
+        // Atualizar a fila ao carregar a página
+        atualizarFila();
     </script>
 </body>
 </html>
